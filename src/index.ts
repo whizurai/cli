@@ -21,6 +21,12 @@ import { UsageManager } from './usage';
 import { DevProxy } from './dev-proxy';
 import { ScaffoldManager } from './scaffold';
 
+// Execution-model commands
+import { makeRunCommand } from './commands/run';
+import { makeInspectCommand } from './commands/inspect';
+import { makeGenerateCommand } from './commands/generate';
+import { makeWatchCommand } from './commands/watch';
+
 // Load environment variables
 dotenv.config();
 
@@ -87,22 +93,40 @@ authCommand
   .command('status')
   .description('Show current authentication status')
   .action(async () => {
+    const config = authManager.getConfig();
+    console.log(chalk.gray(`API URL:      ${config.baseUrl}`));
     const user = await authManager.getCurrentUser();
     if (user) {
-      console.log(chalk.green(`✅ Authenticated as ${user.name} (${user.email})`));
-      console.log(chalk.gray(`Organization: ${user.organizationId}`));
+      if (user.email) {
+        console.log(chalk.green(`✅ Authenticated as ${user.name} (${user.email})`));
+        console.log(chalk.gray(`Organization: ${user.organizationId}`));
+      } else {
+        console.log(chalk.green(`✅ Authenticated via ${user.name}`));
+      }
+    } else if (config.apiKey) {
+      console.log(chalk.yellow('⚠️  Key set but verification failed'));
+      console.log(chalk.gray('Server unreachable or key rejected — check the platform is up at the API URL above'));
     } else {
       console.log(chalk.yellow('❌ Not authenticated'));
-      console.log(chalk.gray('Run "whizzy auth login" to authenticate'));
+      console.log(chalk.gray('Run "whizzy auth set-key <key>" or "whizzy auth login"'));
     }
+  });
+
+authCommand
+  .command('set-url <url>')
+  .description('Set the API base URL (persisted to config; override with WHIZ_API_URL env var)')
+  .action((url: string) => {
+    authManager.setBaseUrl(url);
   });
 
 authCommand
   .command('set-key <key>')
   .description('Set API key directly')
-  .action(async (key: string) => {
+  .option('--no-verify', "Skip the verification ping (useful when the platform isn't running yet)")
+  .action(async (key: string, opts: { verify: boolean }) => {
     try {
-      await authManager.setApiKey(key);
+      // commander inverts --no-* flags: --no-verify makes opts.verify === false
+      await authManager.setApiKey(key, { skipVerify: opts.verify === false });
     } catch (error) {
       console.error(chalk.red('Failed to set API key:', (error as Error).message));
       process.exit(1);
@@ -388,37 +412,8 @@ scaffoldCommand
     }
   );
 
-// Generate command
-program
-  .command('generate <prompt>')
-  .description('Generate content using AI models')
-  .option('-m, --model <model>', 'AI model to use')
-  .option('-t, --temperature <temp>', 'Temperature for generation', '0.7')
-  .option('-l, --max-tokens <tokens>', 'Maximum tokens to generate', '1000')
-  .action(
-    async (
-      prompt: string,
-      options: { baseUrl: string; model?: string; temperature: string; maxTokens: string }
-    ) => {
-      const spinner = ora('Generating content...').start();
-
-      try {
-        const response = await axios.post(`${options.baseUrl}/v1/generate`, {
-          prompt,
-          model: options.model,
-          temperature: parseFloat(options.temperature),
-          maxTokens: parseInt(options.maxTokens),
-        });
-
-        spinner.succeed('Content generated successfully!');
-        console.log(chalk.green((response.data as { content: string }).content));
-      } catch (error) {
-        spinner.fail('Content generation failed');
-        console.error(chalk.red('Error:', (error as Error).message));
-        process.exit(1);
-      }
-    }
-  );
+// Note: the 'generate' command is now registered below via makeGenerateCommand()
+// which scaffolds a normalized run spec manifest from a capability schema.
 
 // Interactive mode
 program
@@ -454,6 +449,13 @@ program
       }
     }
   });
+
+// ─── Execution-model commands ─────────────────────────────────────────────────
+
+program.addCommand(makeRunCommand(authManager));
+program.addCommand(makeInspectCommand(authManager));
+program.addCommand(makeGenerateCommand(authManager));
+program.addCommand(makeWatchCommand(authManager));
 
 // Error handling
 program.on('command:*', () => {

@@ -26,7 +26,7 @@ const mockedInquirer = require('inquirer') as jest.Mocked<typeof import('inquire
 
 describe('AuthManager', () => {
   let authManager: AuthManager;
-  const mockConfigDir = path.join(os.homedir(), '.cheddarwhizzy');
+  const mockConfigDir = path.join(os.homedir(), '.whizurai');
   const mockConfigFile = path.join(mockConfigDir, 'config.json');
 
   beforeEach(() => {

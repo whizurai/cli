@@ -61,14 +61,17 @@ export class AuthManager {
     try {
       if (fs.existsSync(this.configPath)) {
         const configData = fs.readFileSync(this.configPath, 'utf8');
-        return JSON.parse(configData) as AuthConfig;
+        const saved = JSON.parse(configData) as AuthConfig;
+        // Env var always wins over saved config
+        if (process.env.WHIZ_API_URL) saved.baseUrl = process.env.WHIZ_API_URL;
+        return saved;
       }
     } catch (error) {
       console.warn(chalk.yellow('Warning: Could not load config file'), error);
     }
 
     return {
-      baseUrl: 'http://api.whizurai.com',
+      baseUrl: process.env.WHIZ_API_URL ?? 'https://api.whizurai.com',
     };
   }
 
@@ -96,28 +99,61 @@ export class AuthManager {
   }
 
   /**
-   * Set API key
+   * Build an axios client bound to the *current* config's baseUrl.
+   * Use this for any auth-verification call so we hit the configured
+   * server (local / staging / prod), not the constructor default.
    */
-  async setApiKey(apiKey: string): Promise<void> {
+  private clientForCurrentConfig(): AxiosInstance {
+    const config = this.loadConfig();
+    return axios.create({
+      baseURL: config.baseUrl,
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'whizurai-cli/0.2.0',
+      },
+    });
+  }
+
+  /**
+   * Set API key.
+   *
+   * Verification: pings `/v1/capabilities?limit=1` with the key as a
+   * Bearer token. This is the same auth scheme `whizzy inspect/run/watch`
+   * use and matches what the platform's API-key middleware accepts.
+   *
+   * (We deliberately do NOT hit `/v1/auth/me` here — that route is JWT/session
+   * only and is not part of the API-key auth surface.)
+   */
+  async setApiKey(apiKey: string, opts: { skipVerify?: boolean } = {}): Promise<void> {
     const config = this.loadConfig();
     config.apiKey = apiKey;
 
-    // Verify API key by making a test request
-    const spinner = ora('Verifying API key...').start();
+    if (opts.skipVerify) {
+      this.saveConfig(config);
+      console.log(chalk.green('API key saved (verification skipped)'));
+      return;
+    }
+
+    const spinner = ora(`Verifying API key against ${config.baseUrl}...`).start();
 
     try {
-      const response = await this.httpClient.get('/v1/auth/me', {
+      await this.clientForCurrentConfig().get('/v1/capabilities', {
+        params: { limit: 1 },
         headers: { Authorization: `Bearer ${apiKey}` },
       });
 
-      const data = response.data as { id: string; organizationId: string };
-      config.userId = data.id;
-      config.organizationId = data.organizationId;
       this.saveConfig(config);
-
       spinner.succeed('API key verified and saved');
     } catch (error) {
-      spinner.fail('Invalid API key');
+      const status = (error as { response?: { status?: number } }).response?.status;
+      const hint =
+        status === 401 || status === 403
+          ? 'key was rejected by the server'
+          : status
+            ? `server returned HTTP ${status}`
+            : 'could not reach the server (is the platform running on the configured URL?)';
+      spinner.fail(`Invalid API key — ${hint}`);
       throw new Error('API key verification failed');
     }
   }
@@ -189,7 +225,12 @@ export class AuthManager {
   }
 
   /**
-   * Get current user info
+   * Get current user info.
+   *
+   * The platform exposes no API-key-callable identity endpoint, so we ping
+   * `/v1/capabilities?limit=1` to confirm the configured key is valid and
+   * return a minimal stub. Callers that need real user/email/org info should
+   * use `/auth/me` with a session JWT — out of scope for the API-key CLI flow.
    */
   async getCurrentUser(): Promise<UserInfo | null> {
     const config = this.loadConfig();
@@ -199,12 +240,20 @@ export class AuthManager {
     }
 
     try {
-      const response = await this.httpClient.get('/v1/auth/me', {
+      await this.clientForCurrentConfig().get('/v1/capabilities', {
+        params: { limit: 1 },
         headers: { Authorization: `Bearer ${config.apiKey}` },
       });
 
-      return response.data as UserInfo;
-    } catch (error) {
+      const keyTail = config.apiKey.slice(-4);
+      return {
+        id: config.userId ?? 'api-key',
+        email: '',
+        name: `API key …${keyTail}`,
+        organizationId: config.organizationId ?? '',
+        role: 'apikey',
+      };
+    } catch {
       return null;
     }
   }
@@ -281,6 +330,16 @@ export class AuthManager {
     } catch (error) {
       throw new Error('Failed to revoke API key');
     }
+  }
+
+  /**
+   * Persist a base URL override to the config file.
+   */
+  setBaseUrl(url: string): void {
+    const config = this.loadConfig();
+    config.baseUrl = url.replace(/\/$/, '');
+    this.saveConfig(config);
+    console.log(chalk.green(`API URL set to ${config.baseUrl}`));
   }
 
   /**
