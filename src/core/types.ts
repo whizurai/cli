@@ -103,6 +103,58 @@ export type RunStatus =
   | 'failed'
   | 'cancelled';
 
+/**
+ * Derived read model for a run's result — what the platform says the run
+ * actually produced, as opposed to which files it happened to write.
+ *
+ * `semanticType` is an open string on purpose: an unrecognised value must
+ * degrade to a generic rendering, never break the CLI. Known values are text,
+ * markdown, object, collection, image, video, audio, file, unknown.
+ */
+export interface PresentedOutput {
+  key: string;
+  label: string;
+  semanticType: string;
+  value?: unknown;
+  truncated?: boolean;
+  href?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  artifactId?: string;
+  itemType?: string;
+  itemCount?: number;
+  items?: PresentedOutput[];
+  schema?: Record<string, unknown>;
+}
+
+export interface PresentedInput {
+  key: string;
+  label: string;
+  semanticType?: string;
+  value?: unknown;
+  href?: string;
+  mimeType?: string;
+}
+
+export interface PresentedAction {
+  id: string;
+  label: string;
+  outputKey?: string;
+  primary?: boolean;
+  capabilitySlug?: string;
+}
+
+export interface RunPresentation {
+  contractVersion: 1;
+  /** `declared` | `inferred` (compatibility path) | `none`. */
+  source: 'declared' | 'inferred' | 'none';
+  primary: PresentedOutput | null;
+  secondary: PresentedOutput[];
+  debug: PresentedOutput[];
+  inputs: PresentedInput[];
+  actions: PresentedAction[];
+}
+
 export interface Run {
   id: string;
   /** Underlying workflow run ID for debugging. */
@@ -117,6 +169,8 @@ export interface Run {
   createdAt: string;
   startedAt?: string;
   completedAt?: string;
+  /** Derived result read model. Absent when the platform has it disabled. */
+  presentation?: RunPresentation;
 }
 
 export interface RunStep {
