@@ -148,6 +148,11 @@ export interface RunPresentation {
   contractVersion: 1;
   /** `declared` | `inferred` (compatibility path) | `none`. */
   source: 'declared' | 'inferred' | 'none';
+  /**
+   * The run's customer-facing name, from the capability's `name`. Absent for a
+   * workflow-only run — fall back to `workflowSlug` rather than formatting it.
+   */
+  title?: string;
   primary: PresentedOutput | null;
   secondary: PresentedOutput[];
   debug: PresentedOutput[];
