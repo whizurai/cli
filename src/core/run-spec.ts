@@ -47,6 +47,19 @@ export interface RunSpecFlags {
   watch?: boolean;
   /** Validate spec without submitting. */
   dryRun?: boolean;
+  /**
+   * Path to a JSON file holding the ordered shot list for a multi-shot
+   * capability: `[{ "prompt": "...", "durationSeconds": 3 }, ...]`.
+   *
+   * A file rather than repeatable flags because shot ORDER is the contract and
+   * shell argument order is a fragile place to keep it.
+   */
+  shots?: string;
+  /**
+   * Named subject to keep consistent across shots, as
+   * `token=url1,url2`. Repeatable — one per subject.
+   */
+  subject?: string[];
   /** Idempotency key. */
   idempotencyKey?: string;
   /** Webhook URL for completion callback. */
@@ -187,7 +200,62 @@ function buildInputsFromFlags(
   if (flags.quality !== undefined) inputs.quality = flags.quality;
   if (flags.seed !== undefined) inputs.seed = flags.seed;
 
+  // Multi-shot: an ordered shot list and named subject references. Read from a
+  // file and from repeatable `token=urls` flags respectively, then handed over
+  // verbatim — the CLI does not reorder, dedupe or normalise them, because the
+  // order IS the contract and the platform is what enforces the limits.
+  if (flags.shots !== undefined) {
+    inputs.shots = readShotsFile(flags.shots);
+  }
+  if (flags.subject?.length) {
+    inputs.subjectReferences = flags.subject.map(parseSubjectFlag);
+  }
+
   return inputs;
+}
+
+/** Read and shallow-validate an ordered shot list from a JSON file. */
+function readShotsFile(filePath: string): Array<{ prompt: string; durationSeconds: number }> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (err) {
+    throw new Error(`--shots: could not read ${filePath}: ${(err as Error).message}`);
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error(`--shots: ${filePath} must contain a non-empty JSON array of shots`);
+  }
+  return parsed.map((raw, index) => {
+    const shot = raw as Record<string, unknown>;
+    const prompt = typeof shot.prompt === 'string' ? shot.prompt : '';
+    const duration = Number(shot.durationSeconds ?? shot.duration);
+    if (!prompt) throw new Error(`--shots: shot ${index + 1} has no prompt`);
+    if (!Number.isFinite(duration) || duration <= 0) {
+      throw new Error(`--shots: shot ${index + 1} has no usable durationSeconds`);
+    }
+    return { prompt, durationSeconds: duration };
+  });
+}
+
+/** Parse `token=url1,url2` into a neutral subject reference. */
+function parseSubjectFlag(raw: string): {
+  token: string;
+  imageUrls: string[];
+} {
+  const at = raw.indexOf('=');
+  if (at <= 0) {
+    throw new Error(`--subject: expected "token=url1,url2", got "${raw}"`);
+  }
+  const token = raw.slice(0, at).trim();
+  const imageUrls = raw
+    .slice(at + 1)
+    .split(',')
+    .map((u) => u.trim())
+    .filter(Boolean);
+  if (imageUrls.length === 0) {
+    throw new Error(`--subject: "${token}" has no reference images`);
+  }
+  return { token, imageUrls };
 }
 
 /**

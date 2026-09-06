@@ -8,6 +8,8 @@
  *   whiz run image.edit --dry-run               # validate without submitting
  *   whiz run image.edit --watch                  # stream progress
  *   whiz run image.edit --async                  # return run ID immediately
+ *   whiz run video:multi-shot --input start.png \
+ *        --shots shots.json --subject hero_pet=a.jpg,b.jpg
  */
 
 import { Command } from 'commander';
@@ -38,6 +40,13 @@ export function makeRunCommand(authManager: AuthManager): Command {
     .option('--async', 'Submit and return immediately without waiting')
     .option('--watch', 'Stream run progress to terminal')
     .option('--dry-run', 'Validate and print spec without submitting')
+    .option('--shots <file>', 'JSON file with an ordered shot list (multi-shot capabilities)')
+    .option(
+      '--subject <token=urls>',
+      'Named subject to keep consistent across shots, e.g. hero_pet=a.jpg,b.jpg (repeatable)',
+      collect,
+      [],
+    )
     .option('--idempotency-key <key>', 'Idempotency key for deduplication')
     .option('--webhook-url <url>', 'Callback URL on run completion')
     .option('--json', 'Output full JSON result to stdout')
@@ -60,6 +69,10 @@ export function makeRunCommand(authManager: AuthManager): Command {
         async: opts.async as boolean | undefined,
         watch: opts.watch as boolean | undefined,
         dryRun: opts.dryRun as boolean | undefined,
+        shots: opts.shots as string | undefined,
+        subject: (opts.subject as string[] | undefined)?.length
+          ? (opts.subject as string[])
+          : undefined,
         idempotencyKey: opts.idempotencyKey as string | undefined,
         webhookUrl: opts.webhookUrl as string | undefined,
         json: opts.json as boolean | undefined,
