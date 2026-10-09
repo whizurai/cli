@@ -26,6 +26,7 @@ import { makeRunCommand } from './commands/run';
 import { makeInspectCommand } from './commands/inspect';
 import { makeGenerateCommand } from './commands/generate';
 import { makeWatchCommand } from './commands/watch';
+import { makeCancelCommand } from './commands/cancel';
 
 // Load environment variables
 dotenv.config();
@@ -456,6 +457,7 @@ program.addCommand(makeRunCommand(authManager));
 program.addCommand(makeInspectCommand(authManager));
 program.addCommand(makeGenerateCommand(authManager));
 program.addCommand(makeWatchCommand(authManager));
+program.addCommand(makeCancelCommand(authManager));
 
 // Error handling
 program.on('command:*', () => {

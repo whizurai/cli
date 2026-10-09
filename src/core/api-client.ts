@@ -23,7 +23,7 @@ import type {
 } from './types';
 
 const DEFAULT_BASE_URL = 'https://api.whizurai.com';
-const USER_AGENT = 'whiz-cli/0.3.0';
+const USER_AGENT = 'whiz-cli/1.1.0';
 
 const EXT_MIME: Record<string, string> = {
   png: 'image/png',
@@ -171,6 +171,18 @@ export class ApiClient {
         ? data.valid
         : data.status === 'valid' || (Array.isArray(data.errors) && data.errors.length === 0 && data.status !== 'invalid');
     return { ...data, valid };
+  }
+
+  /**
+   * Cancel a capability run (POST /v1/capabilities/capability-runs/:runId/cancel).
+   * Idempotent for an already-cancelled run. Marks the run and cancels its
+   * workflow run best-effort; it does not stop work already on a worker.
+   */
+  async cancelCapabilityRun(runId: string): Promise<Run> {
+    const res = await this.http.post(
+      `/v1/capabilities/capability-runs/${encodeURIComponent(runId)}/cancel`
+    );
+    return res.data as Run;
   }
 
   // ─── Runs ─────────────────────────────────────────────────────────────────
