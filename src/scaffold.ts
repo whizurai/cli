@@ -296,7 +296,7 @@ export default function Home() {
     // .env.local
     const envContent = `# Whizurai API Configuration
 NEXT_PUBLIC_WHIZURAI_API_KEY=your_api_key_here
-NEXT_PUBLIC_WHIZURAI_BASE_URL=http://api.whizurai.com`;
+NEXT_PUBLIC_WHIZURAI_BASE_URL=https://api.whizur.ai`;
 
     fs.writeFileSync(path.join(projectPath, '.env.local'), envContent);
 
@@ -328,7 +328,7 @@ This is a sample Next.js application demonstrating Whizurai integration.
    npm run dev
    \`\`\`
 
-4. Open [http://api.whizurai.com](http://api.whizurai.com) in your browser.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Usage
 
@@ -553,7 +553,7 @@ code {
     // .env.local
     const envContent = `# Whizurai API Configuration
 REACT_APP_WHIZURAI_API_KEY=your_api_key_here
-REACT_APP_WHIZURAI_BASE_URL=https://api.whizurai.com`;
+REACT_APP_WHIZURAI_BASE_URL=https://api.whizur.ai`;
 
     fs.writeFileSync(path.join(projectPath, '.env.local'), envContent);
 
@@ -585,7 +585,7 @@ This is a sample React application demonstrating Whizurai integration.
    npm start
    \`\`\`
 
-4. Open [http://api.whizurai.com](http://api.whizurai.com) in your browser.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Usage
 
@@ -652,7 +652,7 @@ app.use(express.json());
 // Initialize Whizurai client
 const client = new WhizuraiClient({
   apiKey: process.env.WHIZURAI_API_KEY,
-  baseUrl: process.env.WHIZURAI_BASE_URL || 'https://api.whizurai.com',
+  baseUrl: process.env.WHIZURAI_BASE_URL || 'https://api.whizur.ai',
 });
 
 // Health check endpoint
@@ -730,7 +730,7 @@ export default app;`;
     // .env
     const envContent = `# Whizurai API Configuration
 WHIZURAI_API_KEY=your_api_key_here
-WHIZURAI_BASE_URL=https://api.whizurai.com
+WHIZURAI_BASE_URL=https://api.whizur.ai
 
 # Server Configuration
 PORT=3000
@@ -741,7 +741,7 @@ NODE_ENV=development`;
     // .env.example
     const envExampleContent = `# Whizurai API Configuration
 WHIZURAI_API_KEY=your_api_key_here
-WHIZURAI_BASE_URL=https://api.whizurai.com
+WHIZURAI_BASE_URL=https://api.whizur.ai
 
 # Server Configuration
 PORT=3000
@@ -801,7 +801,7 @@ A Node.js API server demonstrating Whizurai integration with Express.js and Type
    npm run dev
    \`\`\`
 
-4. The API will be available at http://api.whizurai.com
+4. The API will be available at http://localhost:3000
 
 ## API Endpoints
 
@@ -820,12 +820,12 @@ A Node.js API server demonstrating Whizurai integration with Express.js and Type
 
 \`\`\`bash
 # Generate content
-curl -X POST http://api.whizurai.com/api/generate \\
+curl -X POST http://localhost:3000/api/generate \\
   -H "Content-Type: application/json" \\
   -d '{"prompt": "Write a story about a robot", "model": "gpt-3.5-turbo"}'
 
 # Enrich content
-curl -X POST http://api.whizurai.com/api/enrich \\
+curl -X POST http://localhost:3000/api/enrich \\
   -H "Content-Type: application/json" \\
   -d '{"content": "This is a sample text", "type": "text"}'
 \`\`\``;
@@ -868,7 +868,7 @@ app = FastAPI(
 
 # Whizurai API configuration
 WHIZURAI_API_KEY = os.getenv("WHIZURAI_API_KEY")
-WHIZURAI_BASE_URL = os.getenv("WHIZURAI_BASE_URL", "https://api.whizurai.com")
+WHIZURAI_BASE_URL = os.getenv("WHIZURAI_BASE_URL", "https://api.whizur.ai")
 
 # Request models
 class GenerateRequest(BaseModel):
@@ -980,7 +980,7 @@ if __name__ == "__main__":
     // .env
     const envContent = `# Whizurai API Configuration
 WHIZURAI_API_KEY=your_api_key_here
-WHIZURAI_BASE_URL=https://api.whizurai.com
+WHIZURAI_BASE_URL=https://api.whizur.ai
 
 # Server Configuration
 PORT=8000
@@ -991,7 +991,7 @@ HOST=0.0.0.0`;
     // .env.example
     const envExampleContent = `# Whizurai API Configuration
 WHIZURAI_API_KEY=your_api_key_here
-WHIZURAI_BASE_URL=https://api.whizurai.com
+WHIZURAI_BASE_URL=https://api.whizur.ai
 
 # Server Configuration
 PORT=8000
@@ -1199,7 +1199,7 @@ curl -X POST http://localhost:8000/api/enrich \\
         </main>
         
         <footer>
-            <p>Powered by <a href="https://whizurai.com" target="_blank">Whizurai</a></p>
+            <p>Powered by <a href="https://whizur.ai" target="_blank">Whizurai</a></p>
         </footer>
     </div>
     
@@ -1401,7 +1401,7 @@ footer a:hover {
 class WhizuraiApp {
     constructor() {
         this.apiKey = null;
-        this.baseUrl = 'https://api.whizurai.com';
+        this.baseUrl = 'https://api.whizur.ai';
         this.initializeApp();
     }
 
@@ -1546,7 +1546,7 @@ module.exports = {
     // .env
     const envContent = `# Whizurai API Configuration
 WHIZURAI_API_KEY=your_api_key_here
-WHIZURAI_BASE_URL=https://api.whizurai.com`;
+WHIZURAI_BASE_URL=https://api.whizur.ai`;
 
     fs.writeFileSync(path.join(projectPath, '.env'), envContent);
 
@@ -1585,7 +1585,7 @@ A vanilla JavaScript application demonstrating Whizurai integration with modern 
    npm start
    \`\`\`
 
-5. Open http://api.whizurai.com in your browser
+5. Open http://localhost:3000 in your browser
 
 ## Build for Production
 

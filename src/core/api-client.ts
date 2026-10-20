@@ -22,7 +22,7 @@ import type {
   CliConfig,
 } from './types';
 
-const DEFAULT_BASE_URL = 'https://api.whizurai.com';
+const DEFAULT_BASE_URL = 'https://api.whizur.ai';
 const USER_AGENT = 'whiz-cli/0.3.0';
 
 const EXT_MIME: Record<string, string> = {

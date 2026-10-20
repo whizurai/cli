@@ -40,7 +40,7 @@ program
 // Global options
 program
   .option('-k, --api-key <key>', 'API key for authentication')
-  .option('-u, --base-url <url>', 'Base URL for the API', 'http://api.whizurai.com')
+  .option('-u, --base-url <url>', 'Base URL for the API', 'https://api.whizur.ai')
   .option('-v, --verbose', 'Enable verbose logging');
 
 // Initialize managers
@@ -336,7 +336,7 @@ proxyCommand
   .command('start')
   .description('Start the development proxy')
   .option('-p, --port <port>', 'Port to run proxy on', '8080')
-  .option('-t, --target <url>', 'Target URL to proxy to', 'http://api.whizurai.com')
+  .option('-t, --target <url>', 'Target URL to proxy to', 'https://api.whizur.ai')
   .option('-l, --log-level <level>', 'Log level', 'info')
   .action(async (options: { port: string; target: string; logLevel: string }) => {
     try {
