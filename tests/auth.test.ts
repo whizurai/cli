@@ -45,7 +45,7 @@ describe('AuthManager', () => {
       const config = authManager.getConfig();
 
       expect(config).toEqual({
-        baseUrl: 'http://localhost:3000',
+        baseUrl: 'https://api.whizur.ai',
       });
     });
 
@@ -182,12 +182,23 @@ describe('AuthManager', () => {
       mockedFs.existsSync.mockReturnValue(true);
       mockedFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig));
 
-      // Mock axios instance
+      // getCurrentUser proves the key works with a cheap authenticated call and
+      // describes the key; there is no user-info endpoint for API keys.
       mockAxiosInstance.get.mockResolvedValue({ data: mockUser });
 
       const user = await authManager.getCurrentUser();
 
-      expect(user).toEqual(mockUser);
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+        '/v1/capabilities',
+        expect.objectContaining({ headers: { Authorization: 'Bearer test-api-key' } }),
+      );
+      expect(user).toEqual({
+        id: 'api-key',
+        email: '',
+        name: 'API key …-key',
+        organizationId: '',
+        role: 'apikey',
+      });
     });
 
     it('should return null when not authenticated', async () => {
@@ -294,7 +305,7 @@ describe('AuthManager', () => {
       const config = authManager.getConfig();
 
       expect(config).toEqual({
-        baseUrl: 'http://localhost:3000',
+        baseUrl: 'https://api.whizur.ai',
       });
     });
 
@@ -305,7 +316,7 @@ describe('AuthManager', () => {
       const config = authManager.getConfig();
 
       expect(config).toEqual({
-        baseUrl: 'http://localhost:3000',
+        baseUrl: 'https://api.whizur.ai',
       });
     });
 

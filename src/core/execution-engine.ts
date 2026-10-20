@@ -18,7 +18,7 @@ import path from 'path';
 import https from 'https';
 import http from 'http';
 import chalk from 'chalk';
-import ora, { Ora } from 'ora';
+import ora from 'ora';
 import type { RunSpec, Run, Artifact, PollOptions } from './types';
 import { ApiClient } from './api-client';
 import { AssetResolver } from './asset-resolver';

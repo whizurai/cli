@@ -26,6 +26,7 @@ import { makeRunCommand } from './commands/run';
 import { makeInspectCommand } from './commands/inspect';
 import { makeGenerateCommand } from './commands/generate';
 import { makeWatchCommand } from './commands/watch';
+import { CLI_VERSION } from './version';
 
 // Load environment variables
 dotenv.config();
@@ -35,7 +36,7 @@ const program = new Command();
 program
   .name('whizzy')
   .description('Whizurai CLI - Command-line interface for the Whizurai Platform')
-  .version('0.2.0');
+  .version(CLI_VERSION);
 
 // Global options
 program
