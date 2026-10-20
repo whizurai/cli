@@ -42,7 +42,7 @@ export class AuthManager {
   private configPath: string;
   private httpClient: AxiosInstance;
 
-  constructor(baseUrl: string = 'http://api.whizurai.com') {
+  constructor(baseUrl: string = 'https://api.whizur.ai') {
     this.configPath = path.join(os.homedir(), '.whizurai', 'config.json');
     this.httpClient = axios.create({
       baseURL: baseUrl,
@@ -71,7 +71,7 @@ export class AuthManager {
     }
 
     return {
-      baseUrl: process.env.WHIZ_API_URL ?? 'https://api.whizurai.com',
+      baseUrl: process.env.WHIZ_API_URL ?? 'https://api.whizur.ai',
     };
   }
 

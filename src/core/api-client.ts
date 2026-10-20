@@ -21,9 +21,10 @@ import type {
   ExecuteCapabilityResponse,
   CliConfig,
 } from './types';
+import { CLI_VERSION } from '../version';
 
-const DEFAULT_BASE_URL = 'https://api.whizurai.com';
-const USER_AGENT = 'whiz-cli/0.3.0';
+const DEFAULT_BASE_URL = 'https://api.whizur.ai';
+const USER_AGENT = `whiz-cli/${CLI_VERSION}`;
 
 const EXT_MIME: Record<string, string> = {
   png: 'image/png',
@@ -67,6 +68,9 @@ export class ApiClient {
     this.http.interceptors.response.use(
       (r) => r,
       (err: AxiosError) => {
+        // Error bodies come in several shapes (`{error:{message,code}}`,
+        // `{message,code}`, `{error:"..."}`); the chain below probes them all.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = err.response?.data as any;
         const message =
           data?.error?.message ||

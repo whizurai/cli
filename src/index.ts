@@ -26,6 +26,7 @@ import { makeRunCommand } from './commands/run';
 import { makeInspectCommand } from './commands/inspect';
 import { makeGenerateCommand } from './commands/generate';
 import { makeWatchCommand } from './commands/watch';
+import { CLI_VERSION } from './version';
 
 // Load environment variables
 dotenv.config();
@@ -35,12 +36,12 @@ const program = new Command();
 program
   .name('whizzy')
   .description('Whizurai CLI - Command-line interface for the Whizurai Platform')
-  .version('0.2.0');
+  .version(CLI_VERSION);
 
 // Global options
 program
   .option('-k, --api-key <key>', 'API key for authentication')
-  .option('-u, --base-url <url>', 'Base URL for the API', 'http://api.whizurai.com')
+  .option('-u, --base-url <url>', 'Base URL for the API', 'https://api.whizur.ai')
   .option('-v, --verbose', 'Enable verbose logging');
 
 // Initialize managers
@@ -336,7 +337,7 @@ proxyCommand
   .command('start')
   .description('Start the development proxy')
   .option('-p, --port <port>', 'Port to run proxy on', '8080')
-  .option('-t, --target <url>', 'Target URL to proxy to', 'http://api.whizurai.com')
+  .option('-t, --target <url>', 'Target URL to proxy to', 'https://api.whizur.ai')
   .option('-l, --log-level <level>', 'Log level', 'info')
   .action(async (options: { port: string; target: string; logLevel: string }) => {
     try {

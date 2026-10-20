@@ -37,35 +37,35 @@ describe('ScaffoldManager', () => {
       expect(templates).toEqual([
         {
           name: 'nextjs-app',
-          description: 'Next.js application with CheddarWhizzy integration',
+          description: 'Next.js application with Whizurai integration',
           language: 'typescript',
           framework: 'Next.js',
           features: ['generate', 'enrich', 'moderate'],
         },
         {
           name: 'react-app',
-          description: 'React application with CheddarWhizzy SDK',
+          description: 'React application with Whizurai SDK',
           language: 'typescript',
           framework: 'React',
           features: ['generate', 'enrich'],
         },
         {
           name: 'nodejs-api',
-          description: 'Node.js API server with CheddarWhizzy integration',
+          description: 'Node.js API server with Whizurai integration',
           language: 'typescript',
           framework: 'Express',
           features: ['generate', 'enrich', 'moderate', 'recommend'],
         },
         {
           name: 'python-app',
-          description: 'Python application with CheddarWhizzy SDK',
+          description: 'Python application with Whizurai SDK',
           language: 'python',
           framework: 'FastAPI',
           features: ['generate', 'enrich', 'moderate'],
         },
         {
           name: 'vanilla-js',
-          description: 'Vanilla JavaScript with CheddarWhizzy SDK',
+          description: 'Vanilla JavaScript with Whizurai SDK',
           language: 'javascript',
           framework: 'Vanilla JS',
           features: ['generate'],
@@ -90,7 +90,7 @@ describe('ScaffoldManager', () => {
     it('should select template interactively', async () => {
       const selectedTemplate = {
         name: 'nextjs-app',
-        description: 'Next.js application with CheddarWhizzy integration',
+        description: 'Next.js application with Whizurai integration',
         language: 'typescript',
         framework: 'Next.js',
         features: ['generate', 'enrich', 'moderate'],
