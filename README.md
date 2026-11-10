@@ -80,6 +80,16 @@ whizzy inspect image.edit
 whizzy inspect image.edit --json
 ```
 
+### `whizzy video-routes` — which video models each route tier can land on
+
+```bash
+# Tier defaults, then every reachable model (automatic or explicit-only)
+whizzy video-routes
+
+# Raw GET /v1/model-router/video-routes
+whizzy video-routes --json
+```
+
 ### `whizzy generate` — scaffold a run spec manifest
 
 ```bash
