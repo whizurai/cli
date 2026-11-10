@@ -21,6 +21,16 @@ whizzy auth login
 whizzy auth status
 ```
 
+For scripts and CI, `WHIZ_API_KEY` overrides the saved key for that process
+(it is never written to `~/.whizurai/config.json`).
+
+## Installing from GitHub Packages
+
+`@whizurai/cli` depends on `@whizurai/sdk-js`, which is published to GitHub
+Packages. The repo's `.npmrc` maps the `@whizurai` scope there; put a token with
+`read:packages` on the whizurai org in your user `~/.npmrc`
+(`//npm.pkg.github.com/:_authToken=<token>`).
+
 ## Targeting a local or staging API
 
 Three ways to override the API URL (highest precedence first):
@@ -90,7 +100,32 @@ whizzy video-routes
 whizzy video-routes --json
 ```
 
-### `whizzy generate` — scaffold a run spec manifest
+### `whizzy outcomes` — run a published outcome and get its result
+
+```bash
+# Start a run and wait for it: prints status changes, then the result and assets.
+# Exits 1 if the run FAILED or was CANCELLED.
+whizzy outcomes run product-shot --input prompt="a red bicycle" --input n=2 --wait
+
+# Inputs from a file (each --input overrides a key), a variant, a replay-safe key
+whizzy outcomes run product-shot --inputs-json inputs.json --variant square --idempotency-key order-1234
+
+# Machine-readable: {"outcomeRun": {...}, "assets": [...]} with --wait
+whizzy outcomes run product-shot -i prompt="a red bicycle" --wait --json
+
+# A run started elsewhere
+whizzy outcomes status <runId>
+whizzy outcomes assets <runId>
+```
+
+- `--input key=value` takes the outcome's unlocked `fieldKey`s. The value is
+  parsed as JSON when it parses (`n=2` → 2, `hd=true` → true), else kept as a
+  string; quote it to force a string (`zip='"02134"'`).
+- `--wait` polls every `--interval` ms (default 2000) up to `--timeout` ms
+  (default 600000). Without it, `run` prints the run id and returns.
+- Insufficient balance prints the error code and the link to add ACU.
+- Goes through `@whizurai/sdk-js` (`client.outcomes`).
+
 
 ```bash
 # Generate a spec template from schema

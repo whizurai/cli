@@ -95,7 +95,11 @@ export class AuthManager {
    * Get current configuration
    */
   getConfig(): AuthConfig {
-    return this.loadConfig();
+    const config = this.loadConfig();
+    // WHIZ_API_KEY wins over the saved key for this process only; it is never
+    // written to config.json (saves go through loadConfig()).
+    if (process.env.WHIZ_API_KEY) config.apiKey = process.env.WHIZ_API_KEY;
+    return config;
   }
 
   /**
