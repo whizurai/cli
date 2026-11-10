@@ -20,6 +20,7 @@ import type {
   ListArtifactsResponse,
   ExecuteCapabilityResponse,
   CliConfig,
+  VideoRouteTable,
 } from './types';
 import { CLI_VERSION } from '../version';
 
@@ -102,6 +103,12 @@ export class ApiClient {
       ...data,
       capabilities: (data.capabilities ?? []).map(normalizeCapability),
     };
+  }
+
+  /** Which video models each route tier can land on (`GET /v1/model-router/video-routes`). */
+  async getVideoRoutes(): Promise<VideoRouteTable> {
+    const res = await this.http.get('/v1/model-router/video-routes');
+    return res.data as VideoRouteTable;
   }
 
   async getCapability(idOrSlug: string): Promise<Capability> {

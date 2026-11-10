@@ -270,3 +270,23 @@ export interface PollOptions {
   timeoutMs?: number;
   onUpdate?: (run: Run) => void;
 }
+
+// ─── Video route table (GET /v1/model-router/video-routes) ──────────────────
+// Mirrors VideoRouteTable in @whizurai/types 1.5.0.
+
+export type VideoRouteTier = 'standard' | 'directed';
+
+export interface VideoRouteTableEntry {
+  model: string;
+  routeTier: VideoRouteTier;
+  lifecycle: 'candidate' | 'validated' | 'production';
+  /** automatic: the router may pick it unnamed; explicit: only when named. */
+  reach: 'automatic' | 'explicit';
+}
+
+export interface VideoRouteTable {
+  version: 1;
+  tierOrder: VideoRouteTier[];
+  tiers: Record<VideoRouteTier, { defaultModel: string | null; automaticModels: string[] }>;
+  models: VideoRouteTableEntry[];
+}
