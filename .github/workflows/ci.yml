@@ -9,6 +9,10 @@ on:
 jobs:
   test:
     runs-on: arc-whizurai
+    # packages: read lets GITHUB_TOKEN install @whizurai/sdk-js from GitHub Packages.
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
@@ -18,7 +22,12 @@ jobs:
         with:
           node-version: '18'
           cache: 'pnpm'
+          # Writes the GitHub Packages auth line into ~/.npmrc from NODE_AUTH_TOKEN.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@whizurai'
       - run: pnpm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

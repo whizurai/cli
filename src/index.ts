@@ -27,6 +27,7 @@ import { makeInspectCommand } from './commands/inspect';
 import { makeGenerateCommand } from './commands/generate';
 import { makeWatchCommand } from './commands/watch';
 import { makeVideoRoutesCommand } from './commands/video-routes';
+import { makeOutcomesCommand } from './commands/outcomes';
 import { CLI_VERSION } from './version';
 
 // Load environment variables
@@ -459,6 +460,7 @@ program.addCommand(makeInspectCommand(authManager));
 program.addCommand(makeGenerateCommand(authManager));
 program.addCommand(makeWatchCommand(authManager));
 program.addCommand(makeVideoRoutesCommand(authManager));
+program.addCommand(makeOutcomesCommand(authManager));
 
 // Error handling
 program.on('command:*', () => {
