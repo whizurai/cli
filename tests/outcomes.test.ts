@@ -12,6 +12,8 @@ const mockOutcomes = {
   getRun: jest.fn(),
   assets: jest.fn(),
   pollUntilDone: jest.fn(),
+  workspace: jest.fn(),
+  command: jest.fn(),
 };
 const mockCtor = jest.fn();
 
@@ -29,6 +31,9 @@ import {
   isTerminal,
   formatRun,
   formatAssets,
+  formatWorkspace,
+  parseCommand,
+  parseExecutionPolicy,
   makeOutcomesCommand,
 } from '../src/commands/outcomes';
 import type { AuthManager } from '../src/auth';
@@ -162,6 +167,133 @@ describe('whizzy outcomes run --wait', () => {
 
     expect(err.mock.calls.flat().join(' ')).toMatch(/INSUFFICIENT_BALANCE: Not enough ACU\./);
     expect(err.mock.calls.flat().join(' ')).toMatch(/billing\?intent=topup/);
+    expect(exit).toHaveBeenCalledWith(1);
+  });
+});
+
+const slot = (status: string, extra: Record<string, unknown> = {}) => ({
+  slot: 'image',
+  label: 'Image',
+  status,
+  chosen: null,
+  decision: null,
+  decisionActor: null,
+  selectionRevisionId: null,
+  versions: [],
+  active: null,
+  lastFailure: null,
+  next: null,
+  tryAnother: null,
+  ...extra,
+});
+
+const workspace = {
+  runId: 'or_1',
+  status: 'RUNNING',
+  mode: 'review',
+  controlRevision: 3,
+  manifestRevision: 1,
+  paused: false,
+  summary: '1 shot awaiting review',
+  spend: { incurredAcu: 4, outstandingAcu: 2, committedAcu: 6, reservedAcu: 40, reservationStatus: 'ACTIVE', automaticCapAcu: null },
+  items: [
+    {
+      id: 'it_1',
+      position: 0,
+      number: 1,
+      label: 'Shot 1',
+      description: slot('Ready to review', {
+        slot: 'description',
+        chosen: { id: 'rev_1', number: 1, current: true },
+      }),
+      stages: [slot('Not generated', { next: { enabled: false, reason: 'Choose a description first' } })],
+    },
+  ],
+  assembly: { ...slot('Not generated', { slot: 'assembly' }), readyCount: 0, requiredCount: 5, blocker: 'Shot 1 has no clip' },
+  finishRemaining: { enabled: true, reason: null, estimateAcu: 30 },
+};
+
+describe('interactive runs', () => {
+  let log: jest.SpyInstance;
+  let err: jest.SpyInstance;
+  let exit: jest.SpyInstance;
+  beforeEach(() => {
+    jest.clearAllMocks();
+    log = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    err = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    exit = jest.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+  });
+  afterEach(() => {
+    log.mockRestore();
+    err.mockRestore();
+    exit.mockRestore();
+  });
+
+  it('parseExecutionPolicy accepts automatic/review only', () => {
+    expect(parseExecutionPolicy(undefined)).toBeUndefined();
+    expect(parseExecutionPolicy('review')).toBe('review');
+    expect(() => parseExecutionPolicy('manual')).toThrow(/automatic, review/);
+  });
+
+  it('parseCommand requires a JSON object with an action', () => {
+    expect(parseCommand('{"action":"pause","expectedControlRevision":3}')).toEqual({ action: 'pause', expectedControlRevision: 3 });
+    expect(() => parseCommand('nope')).toThrow(/JSON object/);
+    expect(() => parseCommand('[1]')).toThrow(/"action"/);
+    expect(() => parseCommand('{"x":1}')).toThrow(/"action"/);
+  });
+
+  it('formatWorkspace shows summary, spend, slots and assembly blocker', () => {
+    const out = formatWorkspace(workspace as never);
+    expect(out).toMatch(/Summary:\s+1 shot awaiting review/);
+    expect(out).toMatch(/4 ACU incurred, 2 outstanding of 40 reserved/);
+    expect(out).toMatch(/description\s+Ready to review v1/);
+    expect(out).toMatch(/image\s+Not generated — Choose a description first/);
+    expect(out).toMatch(/0\/5 ready — Shot 1 has no clip/);
+    expect(out).toMatch(/Finish:\s+30 ACU estimate/);
+  });
+
+  it('run --execution-policy review passes it to the SDK', async () => {
+    mockOutcomes.run.mockResolvedValue({ id: 'or_1', status: 'PENDING' });
+    await makeOutcomesCommand(auth).parseAsync(
+      ['run', 'interactive-five-shot-story', '-i', 'idea=a fox', '--execution-policy', 'review', '--json'],
+      { from: 'user' }
+    );
+    expect(mockOutcomes.run).toHaveBeenCalledWith(
+      'interactive-five-shot-story',
+      { idea: 'a fox' },
+      expect.objectContaining({ executionPolicy: 'review' })
+    );
+  });
+
+  it('workspace --json prints the workspace', async () => {
+    mockOutcomes.workspace.mockResolvedValue(workspace);
+    await makeOutcomesCommand(auth).parseAsync(['workspace', 'or_1', '--json'], { from: 'user' });
+    expect(mockOutcomes.workspace).toHaveBeenCalledWith('or_1');
+    expect(JSON.parse(log.mock.calls[0][0])).toEqual(workspace);
+  });
+
+  it('command sends the parsed command and the client action id', async () => {
+    mockOutcomes.command.mockResolvedValue({ result: { dispatch: false }, workspace });
+    await makeOutcomesCommand(auth).parseAsync(
+      ['command', 'or_1', '--json', '{"action":"pause","expectedControlRevision":3}', '--client-action-id', 'action-0001'],
+      { from: 'user' }
+    );
+    expect(mockOutcomes.command).toHaveBeenCalledWith(
+      'or_1',
+      { action: 'pause', expectedControlRevision: 3 },
+      { clientActionId: 'action-0001' }
+    );
+    expect(JSON.parse(log.mock.calls[0][0]).result).toEqual({ dispatch: false });
+  });
+
+  it('command prints the code and current control revision on STATE_CHANGED', async () => {
+    mockOutcomes.command.mockRejectedValue(
+      Object.assign(new Error('Refresh.'), { code: 'STATE_CHANGED', details: { workspace: { controlRevision: 4 } } })
+    );
+    await makeOutcomesCommand(auth).parseAsync(['command', 'or_1', '--json', '{"action":"cancel"}'], { from: 'user' });
+    const printed = err.mock.calls.flat().join(' ');
+    expect(printed).toMatch(/STATE_CHANGED: Refresh\./);
+    expect(printed).toMatch(/control revision: 4/);
     expect(exit).toHaveBeenCalledWith(1);
   });
 });

@@ -126,6 +126,32 @@ whizzy outcomes assets <runId>
 - Insufficient balance prints the error code and the link to add ACU.
 - Goes through `@whizurai/sdk-js` (`client.outcomes`).
 
+#### Interactive outcome runs
+
+An interactive outcome runs as item invocations you authorize one command at a
+time (platform doc: whizai-platform `docs/interactive-outcome-runs.md`).
+
+```bash
+# Review as you go: only the first step (the plan) is authorized
+whizzy outcomes run interactive-five-shot-story -i idea="a fox learns to fly" --execution-policy review
+
+# Items, every slot's chosen version and freshness, next actions, spend
+whizzy outcomes workspace <runId>          # --json for the full workspace
+
+# One command; prints {"result": ..., "workspace": ...}
+whizzy outcomes command <runId> --json '{"action":"generate","operation":"image","targets":[{"itemId":"<itemId>"}]}'
+whizzy outcomes command <runId> --json '{"action":"finish_remaining","expectedControlRevision":3,"preview":true}'
+whizzy outcomes command <runId> --json '{"action":"pause","expectedControlRevision":3}' --client-action-id pause-0001
+```
+
+- `--json` takes one `InteractiveCommand` (`@whizurai/types`): `apply_edit`,
+  `choose_version`, `generate`, `regenerate_item`, `regenerate_plan`,
+  `replace_plan`, `finish_remaining`, `pause`, `cancel`, `retry`.
+- A `clientActionId` is generated unless you pass `--client-action-id`
+  (previews send none). Reusing your own key replays the original result.
+- A stale command (409 `STATE_CHANGED` and friends) prints the code and the
+  current control revision; re-read the workspace and send it again.
+
 
 ```bash
 # Generate a spec template from schema
