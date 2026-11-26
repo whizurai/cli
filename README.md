@@ -51,6 +51,10 @@ whizzy auth status
 
 ### `whizzy run` — execute a capability
 
+`<target>` is a capability slug or a spec file. Workflows are not run directly:
+app API keys get `403 WORKFLOW_EXECUTION_FORBIDDEN` from `POST /v1/workflows/run`,
+so run the capability that wraps the workflow (find it with `whizzy inspect`).
+
 ```bash
 # Interactive — prompts for required fields from schema
 whizzy run image.edit

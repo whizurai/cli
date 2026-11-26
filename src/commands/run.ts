@@ -1,5 +1,8 @@
 /**
- * whiz run — primary execution command.
+ * whiz run — primary execution command. Executes a capability (or a spec
+ * file naming one). A workflow is run through the capability that wraps it:
+ * POST /v1/workflows/run is refused for app API keys (403
+ * WORKFLOW_EXECUTION_FORBIDDEN), so the CLI does not expose it.
  *
  * Usage:
  *   whiz run image.edit                          # interactive mode
@@ -24,8 +27,11 @@ export function makeRunCommand(authManager: AuthManager): Command {
   const cmd = new Command('run');
 
   cmd
-    .description('Execute a capability, workflow, or spec file')
-    .argument('<target>', 'Capability slug (image.edit), workflow slug, or path to a spec file')
+    .description(
+      'Execute a capability or a spec file. A workflow runs through the capability that wraps it; ' +
+        'find it with `whizzy inspect`.',
+    )
+    .argument('<target>', 'Capability slug (image.edit) or path to a spec file')
     .option('-p, --prompt <text>', 'Prompt text')
     .option('-i, --input <asset>', 'Primary input asset: local file path, URL, or asset_id:xxx')
     .option('--ref <asset>', 'Reference asset')
@@ -95,7 +101,7 @@ export function makeRunCommand(authManager: AuthManager): Command {
           try {
             capability = await client.getCapability(target);
           } catch {
-            // No capability found — proceed without schema (workflow slug or unknown)
+            // No capability schema found — proceed without one; the platform rejects an unknown slug
           }
         }
 
