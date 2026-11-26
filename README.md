@@ -4,8 +4,11 @@ Schema-driven execution client for the WhizAI platform.
 
 ## Installation
 
+`@whizurai/cli` is not published to a registry yet (`npm install -g @whizurai/cli` answers 404). Build it from source; it needs the GitHub Packages token described under [Installing from GitHub Packages](#installing-from-github-packages) for `@whizurai/sdk-js`:
+
 ```bash
-npm install -g @whizurai/cli
+git clone https://github.com/whizurai/cli && cd cli
+pnpm install && pnpm build && npm link   # puts `whizzy` on your PATH
 ```
 
 ## Authentication
