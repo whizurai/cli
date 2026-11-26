@@ -290,3 +290,44 @@ export interface VideoRouteTable {
   tiers: Record<VideoRouteTier, { defaultModel: string | null; automaticModels: string[] }>;
   models: VideoRouteTableEntry[];
 }
+
+// ─── Model catalogue (GET /v1/model-router/catalog) ─────────────────────────
+// Mirrors ModelCatalog in @whizurai/types 1.16.0.
+
+export const CATALOG_OPERATIONS = ['image_generate', 'image_edit'] as const;
+
+export type CatalogOperation = (typeof CATALOG_OPERATIONS)[number];
+
+export interface CatalogPrice {
+  unit: 'image' | 'mtok_in' | 'none';
+  usd: number;
+  /** Day the price was read (YYYY-MM-DD). */
+  pricedAt: string;
+  source: string;
+  note?: string;
+}
+
+export interface CatalogModel {
+  /** What a run passes as `model`. */
+  id: string;
+  label: string;
+  provider: 'openai' | 'kieai' | 'fleet';
+  lifecycle: 'validated' | 'candidate';
+  /** automatic: may be the default; explicit: runs only when named. */
+  reach: 'automatic' | 'explicit';
+  quality: 'draft' | 'standard' | 'premium';
+  price: CatalogPrice;
+  limits?: { maxReferenceImages?: number };
+  notes?: string;
+}
+
+export interface CatalogOperationView {
+  operation: CatalogOperation;
+  default: string;
+  models: CatalogModel[];
+}
+
+export interface ModelCatalog {
+  version: string;
+  operations: CatalogOperationView[];
+}

@@ -21,6 +21,8 @@ import type {
   ExecuteCapabilityResponse,
   CliConfig,
   VideoRouteTable,
+  CatalogOperation,
+  ModelCatalog,
 } from './types';
 import { CLI_VERSION } from '../version';
 
@@ -109,6 +111,12 @@ export class ApiClient {
   async getVideoRoutes(): Promise<VideoRouteTable> {
     const res = await this.http.get('/v1/model-router/video-routes');
     return res.data as VideoRouteTable;
+  }
+
+  /** The model catalogue (`GET /v1/model-router/catalog`), optionally for one operation. */
+  async getModelCatalog(operation?: CatalogOperation): Promise<ModelCatalog> {
+    const res = await this.http.get('/v1/model-router/catalog', operation ? { params: { operation } } : undefined);
+    return res.data as ModelCatalog;
   }
 
   async getCapability(idOrSlug: string): Promise<Capability> {

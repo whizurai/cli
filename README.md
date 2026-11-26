@@ -100,6 +100,20 @@ whizzy video-routes
 whizzy video-routes --json
 ```
 
+### `whizzy models` — which models a run may name as `model`
+
+```bash
+# Every operation: its default (marked *), then each model's id, label, provider,
+# lifecycle, quality and price ($/image with the day it was read)
+whizzy models
+
+# One operation (image_generate | image_edit)
+whizzy models --operation image_edit
+
+# Raw GET /v1/model-router/catalog
+whizzy models --json
+```
+
 ### `whizzy outcomes` — run a published outcome and get its result
 
 ```bash
